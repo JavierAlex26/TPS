@@ -12,7 +12,6 @@ import java.util.*;
 public class Linea {
 	String linea;
 	int i=0;
-	//Vector<String> vecLinea;
 	
 	Scanner Leer = new Scanner (System.in);
 	
@@ -20,7 +19,6 @@ public class Linea {
 	             {7,1,8,6},{-1,1,8,6}}; 
 		
     public Linea() {
-    	//vecLinea = new Vector<String>();
     }
     public int analizaEntrada(char c){
     	if(c!=';' && !Character.isWhitespace(c) && c!=13)
