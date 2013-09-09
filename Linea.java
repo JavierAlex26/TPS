@@ -12,7 +12,6 @@ import java.util.*;
 public class Linea {
 	String linea;
 	int i=0;
-	//Vector<String> vecLinea;
 	
 	Scanner Leer = new Scanner (System.in);
 	
@@ -20,7 +19,6 @@ public class Linea {
 	             {7,1,8,6},{-1,1,8,6}}; 
 		
     public Linea() {
-    	//vecLinea = new Vector<String>();
     }
     public int analizaEntrada(char c){
     	if(c!=';' && !Character.isWhitespace(c) && c!=13)
@@ -38,12 +36,28 @@ public class Linea {
     public void validaLinea(){
     	int estado=-1,entrada=-1,i=0, tam;
     	boolean b, etqErronea=false, codErroneo=false,end=true;
-    	String etq, cod, ope, ruta;
+    	String etq, cod, ope, ruta, auxRuta;
+    	File archINST, archERR;
     	
     	System.out.println("Introduce la ruta del Archivo: ");
     	ruta = Leer.nextLine();
     	
+    	tam = ruta.length();
+    	auxRuta = ruta.substring(tam-3,tam);
+    	auxRuta = auxRuta.toUpperCase();
+    	
+    	if(!auxRuta.equals("ASM"))
+    		System.out.println("\n\"Solo se permiten archivos con extension .ASM\"");
+    	
     	try{
+    		archINST = new File("PracticaUno.INST");
+    		if(archINST.exists())
+    			archINST.delete();
+    			
+    		archERR = new File("PracticaUno.ERR");
+    		if(archERR.exists())
+    			archERR.delete();
+    		
 	    	BufferedWriter bw = new BufferedWriter(new FileWriter("PracticaUno.INST",true));//agrega al final del archivo con el true    	
 	    	bw.write("LINEA\t ETQ\t CODOP\t   OPER");
 	    	bw.newLine();
@@ -57,21 +71,23 @@ public class Linea {
 	    		while(br.ready())
 	    		{
 	    			StringTokenizer token = new StringTokenizer(br.readLine(),"\n");
+	    			i++;
 	    			while(token.hasMoreTokens() && end){
 	    				linea = token.nextToken();
-	    				//vecLinea.add(linea);
-	    				System.out.println("Linea "+(i+1)+": "+linea);
+
+	    				System.out.println("Linea "+(i)+": "+linea);
 	    				etq=cod=ope="";
 	    				etqErronea=codErroneo=false;
 	    				estado=0;
 	    				b=true;
 	    				tam = linea.length();
+	    				
 						for(int k=0; k<tam && b; k++){
 							entrada = analizaEntrada(linea.charAt(k));
 							if(entrada==-1){
 								b=false;
 								bwErr.write("Linea ");
-								bwErr.write(Integer.toString(i+1));
+								bwErr.write(Integer.toString(i));
 								bwErr.write(": Error: FORMATO DE LINEA INVALIDO(Caracter No Valido)");
 								bwErr.newLine();
 							}
@@ -89,7 +105,7 @@ public class Linea {
 								if(estado==-1){
 									b=false;
 								    bwErr.write("Linea ");
-									bwErr.write(Integer.toString(i+1));
+									bwErr.write(Integer.toString(i));
 									bwErr.write(": Error: FORMATO DE LINEA INVALIDO(Caracter Ubicado en Posicion Incorrecta)");
 									bwErr.newLine();
 								}
@@ -104,7 +120,7 @@ public class Linea {
 									System.out.println("Etiqueta Valida");
 								else{
 									bwErr.write("Linea ");
-									bwErr.write(Integer.toString(i+1));
+									bwErr.write(Integer.toString(i));
 									bwErr.write(": Error: ETIQUETA INVALIDA");
 									bwErr.newLine();
 									etqErronea=true;
@@ -116,14 +132,14 @@ public class Linea {
 									System.out.println("CODOP Valido");
 								else{
 									bwErr.write("Linea ");
-									bwErr.write(Integer.toString(i+1));
+									bwErr.write(Integer.toString(i));
 									bwErr.write(": Error: CODOP INVALIDO");
 									bwErr.newLine();
 									codErroneo=true;
 								}
 							}
 							if(!etqErronea && !codErroneo && end && b){
-								escribeArchivoINST((i+1),etq,cod,ope,bw);
+								escribeArchivoINST(i,etq,cod,ope,bw);
 							}
 						}
 	    				i++;
@@ -142,23 +158,10 @@ public class Linea {
     }
     
     public boolean etiquetaValida(String etq){
-    	int tam=etq.length();
-    	boolean flag=false;
-    	if(tam > 8)
-    		return false;
+    	if(etq.matches("^[a-zA-Z]([a-zA-Z]|([0-9])|(_)){1,7}"))
+    		return true;
     	else
-    		if(!(Character.isLowerCase(etq.charAt(0)) || Character.isUpperCase(etq.charAt(0))))
-    			return false;
-    		else{
-    			for(int i=1;i<tam && !flag;i++){
-    				if(!(Character.isDigit(etq.charAt(i)) || Character.isLetter(etq.charAt(i))) && etq.charAt(i)!='_')
-    					flag=true;
-    			}
-    			if(flag)
-    				return false;
-    			else
-    				return true;
-    		}
+    		return false;
     }
     
     public boolean codopValido(String cod){
@@ -183,6 +186,13 @@ public class Linea {
     			else
     				return true;
     		}
+    }
+    
+    public boolean operValido(String ope){
+    	if(ope.matches(".+"))
+    		return true;
+    	else
+    		return false;
     }
     
     public void escribeArchivoINST(int lin, String etq, String cod, String ope, BufferedWriter bw){
