@@ -1,11 +1,3 @@
-/**
- * @(#)Linea.java
- *
- *
- * @author 
- * @version 1.00 2013/8/30
- */
-
 import java.io.*;
 import java.util.*;
 
