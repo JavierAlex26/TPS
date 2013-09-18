@@ -1,15 +1,7 @@
-/**
- * @(#)Linea.java
- *
- *
- * @author
- * @version 1.00 2013/8/30
- */
-
 import java.io.*;
 import java.util.*;
 
-public class Linea {
+public class modosDireccionamiento {
 	String linea;
 	int i=0;
 
@@ -18,8 +10,9 @@ public class Linea {
 	int TdT[][]={{2,1,3,-1},{1,1,1,6},{2,2,4,-1},{4,1,3,6},{4,4,5,6},{7,1,5,6},{-1,-1,-1,-1},
 	             {7,7,8,6},{-1,1,8,6}};
 
-    public Linea() {
+    public modosDireccionamiento() {
     }
+    
     public int analizaEntrada(char c){
     	if(c!=';' && !Character.isWhitespace(c) && c!=13)
     		return 0;
@@ -48,23 +41,23 @@ public class Linea {
 
     	if(!auxRuta.equals("ASM"))
     		System.out.println("\n\"Solo se permiten archivos con extension .ASM\"");
-
-    	try{
-    		archINST = new File("PracticaUno.INST");
+    	else{
+    		
+    		buscarTabop tabop = new buscarTabop();
+    		
+    		archINST = new File("P2ASM.INST");
     		if(archINST.exists())
     			archINST.delete();
 
-    		archERR = new File("PracticaUno.ERR");
+    		archERR = new File("P2ASM.ERR");
     		if(archERR.exists())
     			archERR.delete();
-
-	    	BufferedWriter bw = new BufferedWriter(new FileWriter("PracticaUno.INST",true));//agrega al final del archivo con el true
-	    	bw.write("LINEA\t ETQ\t CODOP\t   OPER");
-	    	bw.newLine();
-	    	bw.write(".........................................");
-	    	bw.newLine();
-
-	    	BufferedWriter bwErr = new BufferedWriter(new FileWriter("PracticaUno.ERR",true));
+    		
+    		archivoINST INST = new archivoINST();
+			INST.crearArchivo();
+			
+			archivoERR ERR = new archivoERR();
+			ERR.crearArchivoERR();
 
 	    	try{
 	    		BufferedReader br = new BufferedReader(new FileReader(ruta));
@@ -86,10 +79,7 @@ public class Linea {
 							entrada = analizaEntrada(linea.charAt(k));
 							if(entrada==-1){
 								b=false;
-								bwErr.write("Linea ");
-								bwErr.write(Integer.toString(i));
-								bwErr.write(": Error: FORMATO DE LINEA INVALIDO(Caracter No Valido)");
-								bwErr.newLine();
+								ERR.entradaInvalida(i);
 							}
 							else{
 								estado = TdT[estado][entrada];
@@ -104,10 +94,7 @@ public class Linea {
 								}
 								if(estado==-1){
 									b=false;
-								    bwErr.write("Linea ");
-									bwErr.write(Integer.toString(i));
-									bwErr.write(": Error: FORMATO DE LINEA INVALIDO(Caracter Ubicado en Posicion Incorrecta)");
-									bwErr.newLine();
+									ERR.estadoInvalida(i);
 								}
 							}
 						}
@@ -118,56 +105,44 @@ public class Linea {
 
 						System.out.println("ETIQUETA: "+ etq);
 						System.out.println("CODOP: "+ cod);
-
-						//(estado!=1){
-							if(!etq.isEmpty()){
-								if(etiquetaValida(etq))
-									System.out.println("Etiqueta Valida");
-								else{
-									bwErr.write("Linea ");
-									bwErr.write(Integer.toString(i));
-									bwErr.write(": Error: ETIQUETA INVALIDA");
-									bwErr.newLine();
-									etqErronea=true;
-								}
+						
+						if(!etq.isEmpty()){
+							if(etiquetaValida(etq))
+								System.out.println("Etiqueta Valida");
+							else{
+								ERR.etiquetaInvalida(i);
+								etqErronea=true;
 							}
-							if(!cod.isEmpty()){
-								if(codopValido(cod))
-									System.out.println("CODOP Valido");
-								else{
-									bwErr.write("Linea ");
-									bwErr.write(Integer.toString(i));
-									bwErr.write(": Error: CODOP INVALIDO");
-									bwErr.newLine();
-									codErroneo=true;
-								}
+						}
+						if(!cod.isEmpty()){
+							if(codopValido(cod))
+								System.out.println("CODOP Valido");
+							else{
+								ERR.codopInvalido(i);
+								codErroneo=true;
 							}
-							if(etq.isEmpty() && cod.isEmpty() && ope.isEmpty())
-								b=false;
-
-							if(cod.isEmpty() && ope.isEmpty() && !etq.isEmpty() && b){
-								b=false;
-								bwErr.write("Linea ");
-								bwErr.write(Integer.toString(i));
-								bwErr.write(": Error: FORMATO DE LINEA INVALIDO");
-								bwErr.newLine();
-							}
-							if(!etqErronea && !codErroneo && b){
-								escribeArchivoINST(i,etq,cod,ope,bw);
-							}
-						//
+						}
+						if(etq.isEmpty() && cod.isEmpty() && ope.isEmpty())
+							b=false;
+							
+						if(cod.isEmpty() && ope.isEmpty() && !etq.isEmpty() && b){
+							b=false;
+							ERR.formatoLineaInvalido(i);
+						}
+						if(!etqErronea && !codErroneo && b){
+							INST.escribirPalabras(i,etq,cod,ope);
+							tabop.buscarCodop(cod,ope,i);
+						}
 	    			}
 	    		}
 	    		br.close();
 	    		if(end==true){
-					 bwErr.write("Error: NO SE ENCONTRO LA DIRECTIVA \"END\"");
+					 ERR.noEnd();
 	    		}
 	    	}
 	    	catch(FileNotFoundException f){System.out.println("No Existe Archivo....");}
 	    	catch(IOException ioe){System.out.println("Error de archivo....");}
-	     	bw.close();
-	     	bwErr.close();
-    	}catch(IOException ioe){}
+    	}
     }
 
     public boolean etiquetaValida(String etq){
@@ -207,32 +182,8 @@ public class Linea {
     		return false;
     }
 
-    public void escribeArchivoINST(int lin, String etq, String cod, String ope, BufferedWriter bw){
-    	String line;
-    	line = Integer.toString(lin);
-    	try{
-    	    bw.write(line);
-    	    bw.write("\t ");
-    	    if(etq.isEmpty())
-    	    	bw.write("Null");
-    	    else
-    	    	bw.write(etq);
-    	    bw.write("\t ");
-    	    if(cod.isEmpty())
-    	    	bw.write("Null");
-    	    else
-    	    	bw.write(cod);
-    	    bw.write("\t  ");
-    	    if(ope.isEmpty())
-    	    	bw.write("Null");
-    	    else
-    	    	bw.write(ope);
-	    	bw.newLine();
-    	}catch(IOException ioe){}
-    }
-
     public static void main(String []args){
-    	Linea l = new Linea();
+    	modosDireccionamiento l = new modosDireccionamiento();
     	l.validaLinea();
     }
 }
